@@ -1,29 +1,13 @@
 require 'yaml'
 
 module ActiveGedcom
-  class Parser
+  class Gedcom
     attr_accessor :charset, :source
     attr_accessor :people, :families
 
-    class Family
-      attr_accessor :children, :wife, :husband
-      def initialize(id)
-        @id = id
-        @children = []
-      end
-    end
+    def initialize(gedcom_filename)
+      file = File.open(gedcom_filename).read
 
-    class Person
-      attr_accessor :id, :name, :sex, :birth, :death, :mother, :father, :famc, :fams, :birthplace, :deathplace
-      def initialize(id)
-        @id = id
-      end
-      def mother; famc.wife if famc; end
-      def father; famc.husband if famc; end
-    end
-
-    def initialize(file)
-      file = File.open(ARGV[0]).read
       yaml = gedcom_to_yaml(file) + "\n"
       @json = YAML.load(yaml)
       @people = {}
@@ -42,7 +26,8 @@ module ActiveGedcom
           parse_family(k, v)
         end
       end
-      ensure_people_families
+
+      link_people_to_families
     end
 
     def parse_head(head)
@@ -52,25 +37,27 @@ module ActiveGedcom
 
     def parse_family(k, v)
       @families[k] ||= Family.new(k)
-      @families[k].husband = @people[v['HUSB']['VALUE']] rescue nil
-      @families[k].wife = @people[v['WIFE']['VALUE']] rescue nil
+
+      @families[k].husband 	= @people[v['HUSB']['VALUE']] rescue nil
+      @families[k].wife 		= @people[v['WIFE']['VALUE']] rescue nil
       # TODO This is only 1 value in my gedcom... is it ever more, if you have linked siblings??
       @families[k].children <<  @people[v['CHIL']['VALUE']]
     end
 
     def parse_person(k, v)
       @people[k] ||= Person.new(k)
-      @people[k].name = v['NAME']['VALUE'] rescue nil
-      @people[k].sex = v['SEX']['VALUE'] rescue nil
-      @people[k].birth = v['BIRT']['DATE']['VALUE'] rescue nil
+
+      @people[k].name 			= v['NAME']['VALUE'] rescue nil
+      @people[k].sex 				= v['SEX']['VALUE'] rescue nil
+      @people[k].birth 			= v['BIRT']['DATE']['VALUE'] rescue nil
       @people[k].birthplace = v['BIRT']['PLAC']['VALUE'] rescue nil
-      @people[k].death = v['DEAT']['DATE']['VALUE'] rescue nil
+      @people[k].death 			= v['DEAT']['DATE']['VALUE'] rescue nil
       @people[k].deathplace = v['DEAT']['PLAC']['VALUE'] rescue nil
-      @people[k].famc = v['FAMC']['VALUE'] rescue nil
-      @people[k].fams = v['FAMS']['VALUE'] rescue nil
+      @people[k].famc 			= v['FAMC']['VALUE'] rescue nil
+      @people[k].fams 			= v['FAMS']['VALUE'] rescue nil
     end
 
-    def ensure_people_families
+    def link_people_to_families
       @people.each_pair do |id,person|
         if famc = @families[person.famc]
           @people[id].famc = famc
@@ -106,6 +93,10 @@ module ActiveGedcom
     end
 
     private
+
+    # GEDCOM is very similar to yaml, with one exception: a node can have a
+    # value *and* children (like XML). So we transform it to YAML syntax, and
+    # add a child "VALUE" line if there's a value for the node.
     def gedcom_to_yaml(f)
       yaml = "---\n"
       lines = f.lines
