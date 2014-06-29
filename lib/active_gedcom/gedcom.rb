@@ -94,9 +94,9 @@ module ActiveGedcom
 
     private
 
-    # GEDCOM is very similar to yaml, with one exception: a node can have a
-    # value *and* children (like XML). So we transform it to YAML syntax, and
-    # add a child "VALUE" line if there's a value for the node.
+    # GEDCOM is very transformable to yaml, with one exception: a node can have
+    # both a value *and* children (like XML). So we transform it to YAML syntax,
+    # and add a child "VALUE" line if there's a value for the node.
     def gedcom_to_yaml(f)
       yaml = "---\n"
       lines = f.lines
