@@ -68,6 +68,15 @@ module ActiveGedcom
       end
     end
 
+    def direct!
+      direct_person_ids = []
+      recurse_family(people.values.first) do |person, level|
+        direct_person_ids << person.id
+      end
+
+      people.delete_if { |id, person| !direct_person_ids.include?(id) }
+    end
+
     def to_text
       lines = []
       recurse_family(people.values.first) do |person, level|
