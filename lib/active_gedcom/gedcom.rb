@@ -38,8 +38,8 @@ module ActiveGedcom
     def parse_family(k, v)
       @families[k] ||= Family.new(k)
 
-      @families[k].husband 	= @people[v['HUSB']['VALUE']] rescue nil
-      @families[k].wife 		= @people[v['WIFE']['VALUE']] rescue nil
+      @families[k].husband  = @people[v['HUSB']['VALUE']] rescue nil
+      @families[k].wife     = @people[v['WIFE']['VALUE']] rescue nil
       # TODO This is only 1 value in my gedcom... is it ever more, if you have linked siblings??
       @families[k].children <<  @people[v['CHIL']['VALUE']]
     end
@@ -47,14 +47,14 @@ module ActiveGedcom
     def parse_person(k, v)
       @people[k] ||= Person.new(k)
 
-      @people[k].name 			= v['NAME']['VALUE'] rescue nil
-      @people[k].sex 				= v['SEX']['VALUE'] rescue nil
-      @people[k].birth 			= v['BIRT']['DATE']['VALUE'] rescue nil
+      @people[k].name       = v['NAME']['VALUE'] rescue nil
+      @people[k].sex        = v['SEX']['VALUE'] rescue nil
+      @people[k].birth      = v['BIRT']['DATE']['VALUE'] rescue nil
       @people[k].birthplace = v['BIRT']['PLAC']['VALUE'] rescue nil
-      @people[k].death 			= v['DEAT']['DATE']['VALUE'] rescue nil
+      @people[k].death      = v['DEAT']['DATE']['VALUE'] rescue nil
       @people[k].deathplace = v['DEAT']['PLAC']['VALUE'] rescue nil
-      @people[k].famc 			= v['FAMC']['VALUE'] rescue nil
-      @people[k].fams 			= v['FAMS']['VALUE'] rescue nil
+      @people[k].famc       = v['FAMC']['VALUE'] rescue nil
+      @people[k].fams       = v['FAMS']['VALUE'] rescue nil
     end
 
     def link_people_to_families
