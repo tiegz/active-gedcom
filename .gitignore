@@ -1,3 +1,5 @@
 *.ged
 *.png
 *.dot
+
+mapbox_access_token.txt

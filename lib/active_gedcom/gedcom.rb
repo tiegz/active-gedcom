@@ -2,10 +2,25 @@ require 'yaml'
 
 module ActiveGedcom
   class Gedcom
+
     attr_accessor :charset, :source
     attr_accessor :people, :families
 
+    def self.configuration
+      @configuration
+    end
+
+    def self.configure!
+      return if configuration
+
+      @configuration = {}
+      @configuration[:mapbox_access_token] = File.open("mapbox_access_token.txt").read.strip rescue nil
+    end
+
+
     def initialize(gedcom_filename)
+      ActiveGedcom::Gedcom.configure!
+
       file = File.open(gedcom_filename).read
 
       yaml = gedcom_to_yaml(file) + "\n"
@@ -77,46 +92,7 @@ module ActiveGedcom
     end
 
     def to_dot
-      dot = "digraph \"gedcom\" {\n"
-
-      root_person = people.values.first
-
-      years = []
-      people_ids = []
-
-      dot << "#{root_person.id.inspect} [shape=box label=#{root_person.birthyear.inspect}]"
-      years << root_person.birthyear
-      people_ids << root_person.id
-
-      dot << "node [shape=box];\n"
-      people.values.each do |person|
-        dot << "#{person.id.inspect} [label=#{[person.name, "#{[person.birthyear, person.deathyear].compact.join(" - ")}"].join("\n").inspect}];\n"
-        if mother = person.mother
-          dot << "{ rank = same; #{mother.birthyear}; #{mother.id.inspect} }\n" if mother.birthyear
-          dot << "#{mother.id.inspect} -> #{person.id.inspect} [label=\"♀\"];\n"
-          years << mother.birthyear
-          people_ids << mother.id
-        end
-        if father = person.father
-          dot << "{ rank = same; #{father.birthyear}; #{father.id.inspect} }\n" if father.birthyear
-          dot << "#{father.id.inspect} -> #{person.id.inspect} [label=\"♂\"];\n"
-          years << father.birthyear
-          people_ids << father.id
-        end
-      end
-
-      # Year labels
-      years = years.uniq.compact.sort
-      first_year = years.shift
-      last_year = years.pop
-      dot << "{\n"
-      dot << "node [shape=plaintext, fontsize=16];\n"
-      dot << "#{first_year} -> #{years.join(' -> ')} -> #{last_year};\n" # Timeline
-      dot << "#{people_ids.map(&:inspect).join(";")};\n" # Ancestors
-      dot << "}\n"
-
-      dot << "}\n"
-      dot
+      people.values.first.to_dot
     end
 
     private
