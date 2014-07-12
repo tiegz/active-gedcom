@@ -70,7 +70,7 @@ module ActiveGedcom
 
     def to_text
       lines = []
-      recurse_family(people.values.first) do |person, level|
+      people.values.first.recurse_family do |person, level|
         lines << "#{'  ' * level}#{person.name}"
       end
       lines.join("\n")
@@ -117,12 +117,6 @@ module ActiveGedcom
 
       dot << "}\n"
       dot
-    end
-
-    def recurse_family(person, level=0, &blk)
-      yield person, level
-      recurse_family(person.mother, level + 1, &blk) if person.mother
-      recurse_family(person.father, level + 1, &blk) if person.father
     end
 
     private
